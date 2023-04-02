@@ -9,6 +9,8 @@ use function array_filter;
 use function strpos;
 use function count;
 
+use const PHP_EOL;
+
 /**
  * Interface for interacting with a document.
  */
@@ -44,7 +46,7 @@ class Document
      */
     public function paragraphs(): array
     {
-        return explode("\n\n", $this->pageContent);
+        return explode(PHP_EOL . PHP_EOL, $this->pageContent);
     }
 
     /**
