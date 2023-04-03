@@ -39,6 +39,18 @@ final class PromptTemplateTest extends TestCase
         $this->assertEquals($inputVariables, $prompt->getInputVariables());
     }
 
+    public function testPromptFormat(): void
+    {
+        $template = 'This is a {foo} test.';
+        $inputVariables = ['foo'];
+        $prompt = new PromptTemplate(
+            $template,
+            $inputVariables,
+        );
+
+        $this->assertEquals('This is a bar test.', $prompt->format(['foo' => 'bar']));
+    }
+
     public function testPromptFromTemplate()
     {
         // Single input variable.
