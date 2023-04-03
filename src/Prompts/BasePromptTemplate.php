@@ -18,6 +18,7 @@ use function file_exists;
 use function mkdir;
 use function file_put_contents;
 use function json_encode;
+use function is_callable;
 
 use const JSON_PRETTY_PRINT;
 
@@ -77,7 +78,7 @@ abstract class BasePromptTemplate
     {
         // Get partial params:
         $partialKwargs = array_map(function ($v) {
-            return is_string($v) ? $v : $v();
+            return is_callable($v) ? $v() : $v ;
         }, $this->partialVariables);
         return array_merge($partialKwargs, $kwargs);
     }

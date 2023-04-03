@@ -177,6 +177,41 @@ final class PromptTemplateTest extends TestCase
         $this->assertEquals($expectedArray, json_decode(file_get_contents($file), true));
     }
 
+    public function testPartialInitString(): void
+    {
+        $template = 'This is a {foo} test.';
+        $prompt = new PromptTemplate($template, [], ['partial_variables' => ['foo' => 1]]);
+        $this->assertEquals($template, $prompt->template);
+        $this->assertEquals([], $prompt->inputVariables);
+        $result = $prompt->format();
+        $this->assertEquals('This is a 1 test.', $result);
+    }
+
+    public function testPartialInitFunc(): void
+    {
+        $template = 'This is a {foo} test.';
+        $prompt = new PromptTemplate($template, [], ['partial_variables' =>  ['foo' => function () {
+            return 2;
+        }]]);
+        $this->assertEquals($template, $prompt->template);
+        $this->assertEquals([], $prompt->inputVariables);
+        $result = $prompt->format();
+        $this->assertEquals('This is a 2 test.', $result);
+    }
+
+    public function testPartial(): void
+    {
+        $template = 'This is a {foo} test.';
+        $prompt = new PromptTemplate($template, ['foo']);
+        $this->assertEquals($template, $prompt->template);
+        $this->assertEquals(['foo'], $prompt->inputVariables);
+        $newPrompt = $prompt->partial(['foo' => '3']);
+        $newResult = $newPrompt->format();
+        $this->assertEquals('This is a 3 test.', $newResult);
+        $result = $prompt->format(['foo' => 'foo']);
+        $this->assertEquals('This is a foo test.', $result);
+    }
+
     private function createTempFolder(
         string $dir = null,
         string $prefix = 'tmp_',
