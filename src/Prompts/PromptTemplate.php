@@ -12,6 +12,7 @@ use function is_string;
 use function file_get_contents;
 use function array_merge;
 use function array_flip;
+use function array_keys;
 
 /**
  * Prompt template class.
@@ -49,6 +50,7 @@ class PromptTemplate extends StringPromptTemplate
         $this->template = $template;
         $this->templateFormat = $settings['template_format'] ?? $this->templateFormat;
         $this->validateTemplate = $settings['validate_template'] ?? $this->validateTemplate;
+        $this->partialVariables = $settings['partial_variables'] ?? [];
 
         $this->validateVariableNames();
         $this->validateTemplate();
@@ -105,7 +107,7 @@ class PromptTemplate extends StringPromptTemplate
      *
      * @return string A formatted string
      */
-    public function format(array $parameters): string
+    public function format(array $parameters = []): string
     {
         $parameters = $this->mergePartialAndUserVariables($parameters);
         return $this->getFormater()->format($this->template, $parameters);
@@ -181,7 +183,7 @@ class PromptTemplate extends StringPromptTemplate
     private function validateTemplate(): void
     {
         if ($this->validateTemplate) {
-            $allInputs = array_merge($this->inputVariables, $this->partialVariables);
+            $allInputs = array_merge($this->inputVariables, array_keys($this->partialVariables));
             $valid = $this->getFormater()->validate($this->template, array_flip($allInputs));
             if (!$valid) {
                 throw new InvalidFormat(
