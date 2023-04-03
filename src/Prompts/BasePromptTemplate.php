@@ -3,7 +3,8 @@
 namespace Kambo\Langchain\Prompts;
 
 use SplFileInfo;
-use ValueError;
+use Kambo\Langchain\Prompts\OutputParser\BaseOutputParser;
+use Kambo\Langchain\Exceptions\ValueError;
 
 use function array_intersect;
 use function implode;
@@ -67,9 +68,9 @@ abstract class BasePromptTemplate
     public function partial(array $arguments): BasePromptTemplate
     {
         $promptDict = $this->toArray();
-        $promptDict['input_variables'] = array_diff($this->inputVariables, array_keys($arguments));
+        $inputVariables = array_diff($this->inputVariables, array_keys($arguments));
         $promptDict['partial_variables'] = array_merge($this->partialVariables, $arguments);
-        return new static($promptDict);
+        return new static($promptDict['template'], $inputVariables, $promptDict);
     }
 
     protected function mergePartialAndUserVariables(array $kwargs): array
@@ -83,7 +84,23 @@ abstract class BasePromptTemplate
 
     abstract public function toArray();
 
+    /**
+     * Format the prompt with the inputs.
+     *
+     * @param array $parameters Any arguments to be passed to the prompt template.
+     *
+     * @return string A formatted string.
+     */
     abstract public function format(array $parameters): string;
+
+    /**
+     * Create Chat Messages.
+     *
+     * @param array $parameters Any arguments to be passed to the prompt template.
+     *
+     * @return PromptValue
+     */
+    abstract public function formatPrompt(array $parameters): PromptValue;
 
     /**
      * Save the prompt.
