@@ -38,8 +38,6 @@ class PromptTemplate extends StringPromptTemplate
      * @param string $template
      * @param array  $inputVariables
      * @param array  $settings
-     *
-     * @throws InvalidFormat
      */
     public function __construct(
         string $template = '',
