@@ -74,13 +74,13 @@ abstract class BasePromptTemplate
         return new static($promptDict['template'], $inputVariables, $promptDict);
     }
 
-    protected function mergePartialAndUserVariables(array $kwargs): array
+    protected function mergePartialAndUserVariables(array $arguments): array
     {
         // Get partial params:
         $partialKwargs = array_map(function ($v) {
             return is_callable($v) ? $v() : $v ;
         }, $this->partialVariables);
-        return array_merge($partialKwargs, $kwargs);
+        return array_merge($partialKwargs, $arguments);
     }
 
     abstract public function toArray();

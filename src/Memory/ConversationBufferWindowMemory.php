@@ -6,6 +6,7 @@ use Kambo\Langchain\Message\HumanMessage;
 use Kambo\Langchain\Message\AIMessage;
 use Kambo\Langchain\Message\SystemMessage;
 use Kambo\Langchain\Message\ChatMessage;
+use Kambo\Langchain\Message\Utils;
 use Exception;
 
 use function array_slice;
@@ -78,23 +79,6 @@ class ConversationBufferWindowMemory extends BaseChatMemory
      */
     public function getBufferString(array $messages, string $humanPrefix = 'Human', string $aiPrefix = 'AI'): string
     {
-        $stringMessages = [];
-        foreach ($messages as $m) {
-            if ($m instanceof HumanMessage) {
-                $role = $humanPrefix;
-            } elseif ($m instanceof AIMessage) {
-                $role = $aiPrefix;
-            } elseif ($m instanceof SystemMessage) {
-                $role = 'System';
-            } elseif ($m instanceof ChatMessage) {
-                $role = $m->getRole();
-            } else {
-                throw new Exception(sprintf('Got unsupported message type: %s', get_class($m)));
-            }
-
-            $stringMessages[] = sprintf('%s: %s', $role, $m->content);
-        }
-
-        return implode("\n", $stringMessages);
+        return Utils::getBufferString($messages, $humanPrefix, $aiPrefix);
     }
 }

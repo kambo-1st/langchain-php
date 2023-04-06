@@ -26,4 +26,9 @@ abstract class BaseMessage
      * @return string
      */
     abstract public function getType(): string;
+
+    public function getContent(): string
+    {
+        return $this->content;
+    }
 }
