@@ -206,11 +206,23 @@ class LLMChain extends Chain
         $outputs = [];
         foreach ($result as $res) {
             if ($this->prompt->outputParser !== null) {
-                $outputs[] = $this->prompt->outputParser->parse($res[$this->output_key]);
+                $outputs[] = $this->prompt->outputParser->parse($res[$this->outputKey]);
             } else {
                 $outputs[] = $res;
             }
         }
         return $outputs;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'memory' => $this->memory?->toArray(),
+            'verbose' => $this->verbose,
+            'llm' => $this->llm->toArray(),
+            'prompt' => $this->prompt->toArray(),
+            'output_key' => $this->outputKey,
+            '_type' => $this->getChainType(),
+        ];
     }
 }

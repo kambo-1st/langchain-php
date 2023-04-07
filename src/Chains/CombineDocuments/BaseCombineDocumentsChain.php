@@ -10,8 +10,8 @@ use const ARRAY_FILTER_USE_KEY;
 
 abstract class BaseCombineDocumentsChain extends Chain
 {
-    private $inputKey = 'input_documents';
-    private $outputKey = 'output_text';
+    protected string $inputKey = 'input_documents';
+    protected string $outputKey = 'output_text';
 
     public function inputKeys(): array
     {
@@ -32,15 +32,15 @@ abstract class BaseCombineDocumentsChain extends Chain
 
     protected function call(array $inputs): array
     {
-        $docs = $inputs[$this->input_key];
+        $docs = $inputs[$this->inputKey];
         $otherKeys = array_filter($inputs, function ($key) {
-            return $key != $this->input_key;
+            return $key != $this->inputKey;
         }, ARRAY_FILTER_USE_KEY);
 
         $outputAnd_extra_return = $this->combineDocs($docs, $otherKeys);
         $output = $outputAnd_extra_return[0];
         $extraReturn_dict = $outputAnd_extra_return[1];
-        $extraReturn_dict[$this->output_key] = $output;
+        $extraReturn_dict[$this->outputKey] = $output;
         return $extraReturn_dict;
     }
 }

@@ -73,4 +73,14 @@ abstract class BaseChatMemory implements BaseMemory
     {
         $this->chatMemory->clear();
     }
+
+    // implement toArray
+    public function toArray(): array
+    {
+        return [
+            'outputKey' => $this->outputKey,
+            'inputKey' => $this->inputKey,
+            'returnMessages' => $this->returnMessages,
+        ];
+    }
 }

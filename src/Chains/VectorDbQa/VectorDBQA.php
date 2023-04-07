@@ -219,7 +219,6 @@ class VectorDBQA extends Chain
         array $kwargs = []
     ) {
         if ($prompt === null) {
-            // TODO [SIMEK, i] select prompt template based on the language model
             $promptTemplate = "Use the following pieces of context to answer the question at the end.
             If you don't know the answer, just say that you don't know, don't try to make up an answer
             .\n\n{context}\n\nQuestion: {question}\nHelpful Answer:";
@@ -275,5 +274,21 @@ class VectorDBQA extends Chain
     public function getChainType(): string
     {
         return 'vector_db_qa';
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'memory' => $this->memory?->toArray(),
+            'verbose' => $this->verbose,
+            'k' => $this->k,
+            'combine_documents_chain' => $this->combineDocumentsChain->toArray(),
+            'search_type' => $this->searchType,
+            'search_kwargs' => $this->searchKwargs,
+            'return_source_documents' => $this->returnSourceDocuments,
+            'input_key' => $this->inputKey,
+            'output_key' => $this->outputKey,
+            '_type' => $this->getChainType(),
+        ];
     }
 }

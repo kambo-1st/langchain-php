@@ -96,13 +96,108 @@ class VectorDBQATest extends TestCase
         $this->assertEquals('Kaleidosocks', $chain->run('stuff'));
     }
 
+    public function testToArray(): void
+    {
+        $openAI = $this->mockOpenAIWithResponses();
+        $embeddings = $this->mockOpenAIEmbeddingsWithResponses();
+
+        $chain = VectorDBQA::fromChainType(
+            $openAI,
+            'stuff',
+            null,
+            [
+                'vectorstore' => new SimpleStupidVectorStore($embeddings)
+            ]
+        );
+
+        $this->assertEquals(
+            [
+            'memory' => null,
+            'verbose' => false,
+            'k' => 4,
+            'combine_documents_chain' =>
+                [
+                    'memory' => null,
+                    'verbose' => false,
+                    'input_key' => 'input_documents',
+                    'output_key' => 'output_text',
+                    'document_variable_name' => 'context',
+                    'llm_chain' =>
+                        [
+                            'memory' => null,
+                            'verbose' => false,
+                            'llm' =>
+                                [
+                                    'model_name' => 'text-davinci-003',
+                                    'model' => 'text-davinci-003',
+                                    'temperature' => 0.7,
+                                    'max_tokens' => 256,
+                                    'top_p' => 1,
+                                    'frequency_penalty' => 0,
+                                    'presence_penalty' => 0,
+                                    'n' => 1,
+                                    'best_of' => 1,
+                                    'logit_bias' =>
+                                        [
+                                        ],
+                                ],
+                            'prompt' =>
+                                [
+                                    'input_variables' =>
+                                        [
+                                            0 => 'context',
+                                            1 => 'question',
+                                        ],
+                                    'template' => 'Use the following pieces of context to answer the question at the end.
+            If you don\'t know the answer, just say that you don\'t know, don\'t try to make up an answer
+            .
+
+{context}
+
+Question: {question}
+Helpful Answer:',
+                                    'template_format' => 'f-string',
+                                    'validate_template' => true,
+                                    'type' => 'prompt',
+                                ],
+                            'output_key' => 'text',
+                            '_type' => 'llm_chain',
+                        ],
+                    'document_prompt' =>
+                        [
+                            'input_variables' =>
+                                [
+                                    0 => 'page_content',
+                                ],
+                            'template' => '{page_content}',
+                            'template_format' => 'f-string',
+                            'validate_template' => true,
+                            'type' => 'prompt',
+                        ],
+                    '_type' => 'stuff_documents_chain',
+                ],
+            'search_type' => 'similarity',
+            'search_kwargs' =>
+                [
+                ],
+            'return_source_documents' => false,
+            'input_key' => 'query',
+            'output_key' => 'result',
+            '_type' => 'vector_db_qa',
+            ],
+            $chain->toArray()
+        );
+    }
+
     private static function prepareResponse(array $response): Response
     {
         return new Response(200, ['Content-Type' => 'application/json'], json_encode($response));
     }
 
-    private static function mockOpenAIEmbeddingsWithResponses(array $responses, array $options = []): OpenAIEmbeddings
-    {
+    private static function mockOpenAIEmbeddingsWithResponses(
+        array $responses = [],
+        array $options = []
+    ): OpenAIEmbeddings {
         $mock = new MockHandler($responses);
 
         $client = self::client($mock);
@@ -123,7 +218,7 @@ class VectorDBQATest extends TestCase
         return new Client($transporter);
     }
 
-    private static function mockOpenAIWithResponses(array $responses, array $options = []): OpenAI
+    private static function mockOpenAIWithResponses(array $responses = [], array $options = []): OpenAI
     {
         $mock = new MockHandler($responses);
 

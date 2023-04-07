@@ -67,12 +67,74 @@ class StuffDocumentsChainTest extends TestCase
         );
     }
 
+    public function testToArray(): void
+    {
+        $openAI = $this->mockOpenAIWithResponses();
+
+        $prompt = new PromptTemplate(
+            'What is a good name for a company that makes {product}?',
+            ['product'],
+        );
+
+        $chain = new LLMChain($openAI, $prompt);
+
+        $stuffDocumentsChain = new StuffDocumentsChain($chain);
+
+        $this->assertEquals(
+            [
+                'memory' => null,
+                'verbose' => false,
+                'input_key' => 'input_documents',
+                'output_key' => 'output_text',
+                'document_variable_name' => 'product',
+                'llm_chain' => [
+                    'memory' => null,
+                    'verbose' => false,
+                    'llm' => [
+                        'model_name' => 'text-davinci-003',
+                        'model' => 'text-davinci-003',
+                        'temperature' => 0.7,
+                        'max_tokens' => 256,
+                        'top_p' => 1,
+                        'frequency_penalty' => 0,
+                        'presence_penalty' => 0,
+                        'n' => 1,
+                        'best_of' => 1,
+                        'logit_bias' => [],
+                    ],
+                    'prompt' => [
+                        'input_variables' => [
+                            'product',
+                        ],
+                        'template' => 'What is a good name for a company that makes {product}?',
+                        'template_format' => 'f-string',
+                        'validate_template' => true,
+                        'type' => 'prompt',
+                    ],
+                    'output_key' => 'text',
+                    '_type' => 'llm_chain',
+                ],
+                'document_prompt' => [
+                    'input_variables' => [
+                        'page_content',
+                    ],
+                    'template' => '{page_content}',
+                    'template_format' => 'f-string',
+                    'validate_template' => true,
+                    'type' => 'prompt',
+                ],
+                '_type' => 'stuff_documents_chain',
+            ],
+            $stuffDocumentsChain->toArray()
+        );
+    }
+
     private static function prepareResponse(array $response): Response
     {
         return new Response(200, ['Content-Type' => 'application/json'], json_encode($response));
     }
 
-    private static function mockOpenAIWithResponses(array $responses, array $options = []): OpenAI
+    private static function mockOpenAIWithResponses(array $responses = [], array $options = []): OpenAI
     {
         $mock = new MockHandler($responses);
 

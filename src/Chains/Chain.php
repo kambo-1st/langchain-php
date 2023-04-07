@@ -271,7 +271,11 @@ abstract class Chain
         return $outputs[$this->outputKeys()[0]];
     }
 
-    // TODO [SIMEK, i] implement toArray method
+    /**
+     * Convert the chain to an array.
+     * @return array
+     */
+    abstract protected function toArray(): array;
 
     /**
      * Save the chain.

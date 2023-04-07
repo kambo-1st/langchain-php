@@ -252,9 +252,13 @@ class BaseOpenAI extends BaseLLM
         return $this->defaultParams();
     }
 
-    public function identifyingParams(): array
+    /**
+     * Get the identifying parameters.
+     *
+     * @return array
+     */
+    public function getIdentifyingParams(): array
     {
-        /** @var array<string, mixed> $defaultParams */
         $defaultParams = $this->defaultParams();
 
         return array_merge(['model_name' => $this->modelName], $defaultParams);
@@ -263,5 +267,23 @@ class BaseOpenAI extends BaseLLM
     public function llmType(): string
     {
         return 'openai';
+    }
+
+    public function toArray(): array
+    {
+        return $this->getIdentifyingParams();
+        return [
+            'model_name' => $this->modelName,
+            'temperature' => $this->temperature,
+            'max_tokens' => $this->maxTokens,
+            'top_p' => $this->topP,
+            'frequency_penalty' => $this->frequencyPenalty,
+            'presence_penalty' => $this->presencePenalty,
+            'n' => $this->n,
+            'best_of' => $this->bestOf,
+            'logit_bias' => $this->logitBias,
+            'max_retries' => $this->maxRetries,
+            'streaming' => $this->streaming,
+        ];
     }
 }

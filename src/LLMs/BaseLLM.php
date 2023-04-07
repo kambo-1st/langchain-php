@@ -6,14 +6,25 @@ use Kambo\Langchain\Callbacks\BaseCallbackManager;
 use Kambo\Langchain\Callbacks\CallbackManager;
 use Kambo\Langchain\Callbacks\StdOutCallbackHandler;
 use Exception;
+use Kambo\Langchain\Exceptions\ValueError;
+use Stringable;
+use SplFileInfo;
 
 use function get_class;
+use function print_r;
+use function is_string;
+use function file_exists;
+use function mkdir;
+use function file_put_contents;
+use function json_encode;
+
+use const JSON_PRETTY_PRINT;
 
 /**
  * Base class for all language models.
- * TODO [SIMEK, i] implement toArray, __toString, cache and saving to JSON
+ * TODO [SIMEK, i] implement cache
  */
-abstract class BaseLLM extends BaseLanguageModel
+abstract class BaseLLM extends BaseLanguageModel implements Stringable
 {
     public bool $verbose = false;
     public ?BaseCallbackManager $callbackManager = null;
@@ -86,6 +97,26 @@ abstract class BaseLLM extends BaseLanguageModel
     abstract public function generateResult(array $prompts, array $stop = null): LLMResult;
 
     /**
+     * Convert the LLM to an array.
+     *
+     * @return array
+     */
+    abstract public function toArray(): array;
+
+    abstract public function getIdentifyingParams(): array;
+
+    /**
+     * Get a string representation of the object for printing.
+     *
+     * @return string
+     */
+    public function __toString(): string
+    {
+        $clsName = "\033[1m" . get_class($this) . "\033[0m";
+        return $clsName . "\nParams: " . print_r($this->getIdentifyingParams(), true);
+    }
+
+    /**
      * @param string     $prompt
      * @param array|null $stop
      *
@@ -96,5 +127,31 @@ abstract class BaseLLM extends BaseLanguageModel
         $result = $this->generate([$prompt], $stop);
 
         return $result->getFirstGenerationText();
+    }
+
+    /**
+     * Save the LLM.
+     *
+     * @param string|SplFileInfo $filePath
+     *
+     * @return void
+     */
+    public function save(string|SplFileInfo $filePath): void
+    {
+        if (is_string($filePath)) {
+            $filePath = new SplFileInfo($filePath);
+        }
+
+        // create directory if not exists
+        if (!file_exists($filePath->getPath())) {
+            mkdir($filePath->getPath(), 0644, true);
+        }
+
+        $data = $this->toArray();
+        if ($filePath->getExtension() === 'json') {
+            file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT));
+        } else {
+            throw new ValueError($filePath . ' must be json or yaml');
+        }
     }
 }
