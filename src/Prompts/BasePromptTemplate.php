@@ -51,7 +51,7 @@ abstract class BasePromptTemplate
             );
         }
 
-        $overall = array_intersect($this->inputVariables, $this->partialVariables);
+        $overall = array_intersect($this->inputVariables, array_keys($this->partialVariables));
         if (!empty($overall)) {
             throw new ValueError(
                 'Found overlapping input and partial variables: ' . implode(', ', $overall)
