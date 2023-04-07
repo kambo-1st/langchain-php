@@ -63,6 +63,49 @@ class LLMChainTest extends TestCase
         );
     }
 
+    public function testToArray(): void
+    {
+        $openAI = $this->mockOpenAIWithResponses();
+
+        $prompt = new PromptTemplate(
+            'What is a good name for a company that makes {product}?',
+            ['product'],
+        );
+
+        $chain = new LLMChain($openAI, $prompt);
+
+        $this->assertEquals(
+            [
+                'memory' => null,
+                'verbose' => false,
+                'llm' => [
+                    'model_name' => 'text-davinci-003',
+                    'model' => 'text-davinci-003',
+                    'temperature' => 0.7,
+                    'max_tokens' => 256,
+                    'top_p' => 1,
+                    'frequency_penalty' => 0,
+                    'presence_penalty' => 0,
+                    'n' => 1,
+                    'best_of' => 1,
+                    'logit_bias' => [],
+                ],
+                'prompt' => [
+                    'input_variables' => [
+                        'product',
+                    ],
+                    'template' => 'What is a good name for a company that makes {product}?',
+                    'template_format' => 'f-string',
+                    'validate_template' => true,
+                    'type' => 'prompt',
+                ],
+                'output_key' => 'text',
+                '_type' => 'llm_chain',
+            ],
+            $chain->toArray()
+        );
+    }
+
     public function testLLMChainPredict(): void
     {
         $openAI = $this->mockOpenAIWithResponses(
@@ -147,7 +190,7 @@ class LLMChainTest extends TestCase
         return new Response(200, ['Content-Type' => 'application/json'], json_encode($response));
     }
 
-    private static function mockOpenAIWithResponses(array $responses, array $options = []): OpenAI
+    private static function mockOpenAIWithResponses(array $responses = [], array $options = []): OpenAI
     {
         $mock = new MockHandler($responses);
 

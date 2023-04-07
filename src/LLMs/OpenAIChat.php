@@ -124,4 +124,15 @@ final class OpenAIChat extends BaseLLM
     {
         return 'openai-chat';
     }
+
+    public function toArray(): array
+    {
+        return $this->getIdentifyingParams();
+        return [
+            'model_name' => $this->modelName,
+            'model_kwargs' => $this->modelAdditionalParams,
+            'max_retries' => $this->maxRetries,
+            'prefix_messages' => $this->prefixMessages,
+        ];
+    }
 }

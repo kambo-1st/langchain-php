@@ -11,4 +11,6 @@ interface BaseMemory
     public function saveContext(array $inputs, array $outputs): void;
 
     public function clear();
+
+    public function toArray(): array;
 }

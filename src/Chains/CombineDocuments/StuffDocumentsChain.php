@@ -122,4 +122,23 @@ class StuffDocumentsChain extends BaseCombineDocumentsChain
 
         return [$this->llmChain->predict($inputs), []];
     }
+
+    public function getChainType(): string
+    {
+        return 'stuff_documents_chain';
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'memory' => $this->memory?->toArray(),
+            'verbose' => $this->verbose,
+            'input_key' => $this->inputKey,
+            'output_key' => $this->outputKey,
+            'document_variable_name' => $this->documentVariableName,
+            'llm_chain' => $this->llmChain->toArray(),
+            'document_prompt' => $this->documentPrompt->toArray(),
+            '_type' => $this->getChainType(),
+        ];
+    }
 }

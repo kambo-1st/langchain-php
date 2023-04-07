@@ -59,6 +59,19 @@ class OpenAIChatTest extends TestCase
         );
     }
 
+    public function testToArray(): void
+    {
+        $openAI = $this->mockOpenAIWithResponses();
+
+        $this->assertEquals(
+            [
+                'model_name' => 'gpt-3.5-turbo',
+                'model_kwargs' => [],
+            ],
+            $openAI->toArray(),
+        );
+    }
+
     public function testGenerate(): void
     {
         $openAI = $this->mockOpenAIWithResponses(
@@ -131,7 +144,7 @@ class OpenAIChatTest extends TestCase
         return new Response(200, ['Content-Type' => 'application/json'], json_encode($response));
     }
 
-    private static function mockOpenAIWithResponses(array $responses, array $options = []): OpenAIChat
+    private static function mockOpenAIWithResponses(array $responses = [], array $options = []): OpenAIChat
     {
         $mock = new MockHandler($responses);
 

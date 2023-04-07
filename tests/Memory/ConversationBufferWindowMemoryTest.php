@@ -22,6 +22,28 @@ class ConversationBufferWindowMemoryTest extends TestCase
         $this->assertInstanceOf(AIMessage::class, $memory->getBuffer()[1]);
     }
 
+    public function testToArray(): void
+    {
+        $memory = new ConversationBufferWindowMemory();
+        $inputs = ['input' => 'How are you?'];
+        $outputs = ['output' => 'I am fine, thank you.'];
+
+        $memory->saveContext($inputs, $outputs);
+
+        $this->assertEquals(
+            [
+                'outputKey' => null,
+                'inputKey' => null,
+                'returnMessages' => false,
+                'k' => 5,
+                'human_prefix' => 'Human',
+                'ai_prefix' => 'AI',
+                'memory_key' => 'history',
+            ],
+            $memory->toArray()
+        );
+    }
+
     public function testClear(): void
     {
         $memory = new ConversationBufferWindowMemory();
