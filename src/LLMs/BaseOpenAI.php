@@ -3,6 +3,7 @@
 namespace Kambo\Langchain\LLMs;
 
 use Kambo\Langchain\Callbacks\CallbackManager;
+use Psr\SimpleCache\CacheInterface;
 use STS\Backoff\Backoff;
 use OpenAI\Client;
 use InvalidArgumentException;
@@ -76,13 +77,15 @@ class BaseOpenAI extends BaseLLM
      * @param array            $config
      * @param ?Client          $client
      * @param ?CallbackManager $callbackManager
+     * @param ?CacheInterface  $cache
      */
     public function __construct(
         array $config = [],
         ?Client $client = null,
-        ?CallbackManager $callbackManager = null
+        ?CallbackManager $callbackManager = null,
+        ?CacheInterface $cache = null
     ) {
-        parent::__construct($callbackManager);
+        parent::__construct($config, $callbackManager, $cache);
         $this->client = $client;
         $this->modelName = $config['model_name'] ?? $this->modelName;
         $this->temperature = $config['temperature'] ?? $this->temperature;
@@ -272,18 +275,5 @@ class BaseOpenAI extends BaseLLM
     public function toArray(): array
     {
         return $this->getIdentifyingParams();
-        return [
-            'model_name' => $this->modelName,
-            'temperature' => $this->temperature,
-            'max_tokens' => $this->maxTokens,
-            'top_p' => $this->topP,
-            'frequency_penalty' => $this->frequencyPenalty,
-            'presence_penalty' => $this->presencePenalty,
-            'n' => $this->n,
-            'best_of' => $this->bestOf,
-            'logit_bias' => $this->logitBias,
-            'max_retries' => $this->maxRetries,
-            'streaming' => $this->streaming,
-        ];
     }
 }

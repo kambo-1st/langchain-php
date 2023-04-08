@@ -2,6 +2,7 @@
 
 namespace Kambo\Langchain\LLMs;
 
+use Kambo\Langchain\Callbacks\CallbackManager;
 use OpenAI\Client;
 use OpenAI\OpenAI;
 use Kambo\Langchain\Exceptions\IllegalState;
@@ -25,9 +26,10 @@ final class OpenAIChat extends BaseLLM
 
     public function __construct(
         array $config = [],
-        ?Client $client = null
+        ?Client $client = null,
+        ?CallbackManager $callbackManager = null
     ) {
-        parent::__construct();
+        parent::__construct($config, $callbackManager);
 
         $token = getenv('OPENAI_API_KEY');
         if (!$token) {
@@ -128,11 +130,5 @@ final class OpenAIChat extends BaseLLM
     public function toArray(): array
     {
         return $this->getIdentifyingParams();
-        return [
-            'model_name' => $this->modelName,
-            'model_kwargs' => $this->modelAdditionalParams,
-            'max_retries' => $this->maxRetries,
-            'prefix_messages' => $this->prefixMessages,
-        ];
     }
 }

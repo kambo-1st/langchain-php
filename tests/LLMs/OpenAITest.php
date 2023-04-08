@@ -13,8 +13,10 @@ use OpenAI\ValueObjects\Transporter\Headers;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use Psr\SimpleCache\CacheInterface;
 use RuntimeException;
 use SplFileInfo;
+use Kambo\Langchain\LLMs\Generation;
 
 use function json_encode;
 use function array_merge;
@@ -67,6 +69,179 @@ class OpenAITest extends TestCase
         $this->assertEquals(
             'Kaleidosocks',
             $openAI('What would be a good company name for a company that makes colorful socks?')
+        );
+    }
+
+    public function testExecuteWithCache(): void
+    {
+        $cache = $this->mockCache();
+        $openAI = $this->mockOpenAIWithResponses(
+            [
+                self::prepareResponse(
+                    [
+                        'id' => 'cmpl-6yE7cLrSIWqxXyAqwrI1HhOc5M3eu',
+                        'object' => 'text_completion',
+                        'created' => 1679801984,
+                        'model' => 'text-davinci-003',
+                        'choices' =>
+                            [
+                                [
+                                    'text' => 'Kaleidosocks',
+                                    'index' => 0,
+                                    'logprobs' => null,
+                                    'finish_reason' => 'stop',
+                                ],
+                            ],
+                        'usage' => [
+                            'prompt_tokens' => 15,
+                            'completion_tokens' => 7,
+                            'total_tokens' => 22,
+                        ],
+                    ]
+                )
+            ],
+            ['cache' => true],
+            $cache
+        );
+
+        $this->assertEquals(
+            'Kaleidosocks',
+            $openAI('What would be a good company name for a company that makes colorful socks?')
+        );
+
+        $cacheItems = [
+            'openai9958f40e05d25fe42decae7773fbcc49' =>
+                [
+                        [
+                            new Generation(
+                                'Kaleidosocks',
+                                [
+                                    'finish_reason' => 'stop',
+                                    'logprobs' => null,
+                                ],
+                            ),
+                        ],
+                        [
+                            'token_usage' => [
+                                'completion_tokens' => 7,
+                                'prompt_tokens' => 15,
+                                'total_tokens' => 22,
+                            ],
+                            'model_name' => 'text-davinci-003',
+                        ],
+
+                ]
+        ];
+
+        $this->assertEquals($cacheItems, $cache->toArray());
+
+        $this->assertEquals(
+            'Kaleidosocks',
+            $openAI('What would be a good company name for a company that makes colorful socks?')
+        );
+    }
+
+    public function testGenerateWithCache(): void
+    {
+        $cache = $this->mockCache();
+        $openAI = $this->mockOpenAIWithResponses(
+            [
+                self::prepareResponse(
+                    [
+                        'id' => 'cmpl-6yE7cLrSIWqxXyAqwrI1HhOc5M3eu',
+                        'object' => 'text_completion',
+                        'created' => 1679801984,
+                        'model' => 'text-davinci-003',
+                        'choices' =>
+                            [
+                                [
+                                    'text' => 'Kaleidosocks',
+                                    'index' => 0,
+                                    'logprobs' => null,
+                                    'finish_reason' => 'stop',
+                                ],
+                            ],
+                        'usage' => [
+                            'prompt_tokens' => 15,
+                            'completion_tokens' => 7,
+                            'total_tokens' => 22,
+                        ],
+                    ]
+                ),
+                self::prepareResponse(
+                    [
+                        'id' => 'cmpl-6yE7cLrSIWqxXyAqwrI1HhOc5M3eu',
+                        'object' => 'text_completion',
+                        'created' => 1679801984,
+                        'model' => 'text-davinci-003',
+                        'choices' =>
+                            [
+                                [
+                                    'text' => 'I dont know',
+                                    'index' => 0,
+                                    'logprobs' => null,
+                                    'finish_reason' => 'stop',
+                                ],
+                            ],
+                        'usage' => [
+                            'prompt_tokens' => 66,
+                            'completion_tokens' => 5,
+                            'total_tokens' => 10,
+                        ],
+                    ]
+                )
+            ],
+            ['cache' => true],
+            $cache
+        );
+
+        $this->assertEquals(
+            'Kaleidosocks',
+            $openAI->generate(['What would be a good company name for a company that makes colorful socks?'])
+                ->getFirstGenerationText()
+        );
+
+        $cacheItems = [
+            'openai9958f40e05d25fe42decae7773fbcc49' =>
+                [
+                    [
+                        new Generation(
+                            'Kaleidosocks',
+                            [
+                                'finish_reason' => 'stop',
+                                'logprobs' => null,
+                            ],
+                        ),
+                    ],
+                    [
+                        'token_usage' => [
+                            'completion_tokens' => 7,
+                            'prompt_tokens' => 15,
+                            'total_tokens' => 22,
+                        ],
+                        'model_name' => 'text-davinci-003',
+                    ],
+
+                ]
+        ];
+
+        $this->assertEquals($cacheItems, $cache->toArray());
+
+        $result = $openAI->generate(
+            [
+                'What would be a good company name for a company that makes colorful socks?',
+                'whats your name?'
+            ]
+        );
+
+        $this->assertEquals(
+            'Kaleidosocks',
+            $result->getFirstGenerationText(),
+        );
+
+        $this->assertEquals(
+            'I dont know',
+            $result->getGeneration(1)[0]->text,
         );
     }
 
@@ -198,12 +373,15 @@ TEXT;
         return new Response(200, ['Content-Type' => 'application/json'], json_encode($response));
     }
 
-    private static function mockOpenAIWithResponses(array $responses = [], array $options = []): OpenAI
-    {
+    private static function mockOpenAIWithResponses(
+        array $responses = [],
+        array $options = [],
+        ?CacheInterface $cache = null
+    ): OpenAI {
         $mock = new MockHandler($responses);
 
         $client = self::client($mock);
-        return new OpenAI(array_merge(['openai_api_key' => 'test'], $options), $client);
+        return new OpenAI(array_merge(['openai_api_key' => 'test'], $options), $client, null, $cache);
     }
 
     private static function client(MockHandler $mockHandler): Client
@@ -266,5 +444,72 @@ TEXT;
         }
 
         throw new RuntimeException('Maximum number of attempts has been reached, prefix: ' . $i);
+    }
+
+    private function mockCache(array $storage = []): CacheInterface
+    {
+        return new class ($storage) implements CacheInterface {
+            public function __construct(private array $storage = [])
+            {
+            }
+
+            public function get($key, $default = null): mixed
+            {
+                return $this->storage[$key] ?? $default;
+            }
+
+            public function set($key, $value, $ttl = null): bool
+            {
+                $this->storage[$key] = $value;
+                return true;
+            }
+
+            public function delete($key): bool
+            {
+                unset($this->storage[$key]);
+                return true;
+            }
+
+            public function clear(): bool
+            {
+                $this->storage = [];
+                return true;
+            }
+
+            public function getMultiple($keys, $default = null): array
+            {
+                $result = [];
+                foreach ($keys as $key) {
+                    $result[$key] = $this->get($key, $default);
+                }
+                return $result;
+            }
+
+            public function setMultiple($values, $ttl = null): bool
+            {
+                foreach ($values as $key => $value) {
+                    $this->set($key, $value, $ttl);
+                }
+                return true;
+            }
+
+            public function deleteMultiple($keys): bool
+            {
+                foreach ($keys as $key) {
+                    $this->delete($key);
+                }
+                return true;
+            }
+
+            public function has($key): bool
+            {
+                return isset($this->storage[$key]);
+            }
+
+            public function toArray(): array
+            {
+                return $this->storage;
+            }
+        };
     }
 }
