@@ -4,11 +4,11 @@
 
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kambo/langchain.svg?style=flat-square)](https://packagist.org/packages/kambo/langchain)
-[![Tests](https://img.shields.io/github/actions/workflow/status/kambo/langchain/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/kambo/langchain/actions/workflows/run-tests.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/kambo-1st/langchain-php/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/kambo-1st/langchain-php/actions/workflows/run-tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/kambo/langchain.svg?style=flat-square)](https://packagist.org/packages/kambo/langchain)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-The LangChain PHP Port is a meticulously crafted adaptation of the original LangChain library, bringing its robust natural language processing capabilities to the PHP ecosystem. 
+The LangChain PHP Port is a meticulously crafted adaptation of the original [LangChain library](https://github.com/hwchase17/langchain), bringing its robust natural language processing capabilities to the PHP ecosystem. 
 This faithful port allows developers to harness the full potential of LangChain's features, while preserving the familiar PHP syntax and structure.
 
 ## Installation
@@ -42,12 +42,6 @@ This library is still in development. Use at your own risk!
 * Document loaders: TextLoader
 
 More to come!
-
-## 💁 Contributing
-
-As an open source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infra, or better documentation.
-
-For detailed information on how to contribute, see [here](.github/CONTRIBUTING.md).
 
 ## License
 
