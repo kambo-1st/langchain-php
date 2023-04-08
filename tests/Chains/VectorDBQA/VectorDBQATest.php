@@ -20,6 +20,8 @@ use PHPUnit\Framework\TestCase;
 use function json_encode;
 use function array_merge;
 
+use const PHP_EOL;
+
 class VectorDBQATest extends TestCase
 {
     public function testRun(): void
@@ -148,14 +150,17 @@ class VectorDBQATest extends TestCase
                                             0 => 'context',
                                             1 => 'question',
                                         ],
-                                    'template' => 'Use the following pieces of context to answer the question at the end.
-            If you don\'t know the answer, just say that you don\'t know, don\'t try to make up an answer
-            .
-
-{context}
-
-Question: {question}
-Helpful Answer:',
+                                    'template' => 'Use the following pieces of context to answer the question at the end.'
+                                        . PHP_EOL .
+                                        '            If you don\'t know the answer, just say that you don\'t know, don\'t try to make up an answer'
+                                        . PHP_EOL .
+                                        '            .'
+                                        . "\n"
+                                        . "\n" .
+                                        '{context}' . "\n" . "\n" .
+                                        'Question: {question}' . "\n" .
+                                        'Helpful Answer:'
+                                    ,
                                     'template_format' => 'f-string',
                                     'validate_template' => true,
                                     'type' => 'prompt',
