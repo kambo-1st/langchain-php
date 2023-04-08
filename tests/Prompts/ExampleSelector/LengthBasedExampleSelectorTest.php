@@ -36,8 +36,8 @@ class LengthBasedExampleSelectorTest extends TestCase
     public function testSelectorTrimsOneExample()
     {
         $selector = $this->selector();
-        $long_question = 'I am writing a really long question,
-        this probably is going to affect the example right?';
+        $long_question
+            = 'I am writing a really long question,        this probably is going to affect the example right?';
         $output = $selector->selectExamples(['question' => $long_question]);
         $this->assertEquals([self::EXAMPLES[0]], $output);
     }

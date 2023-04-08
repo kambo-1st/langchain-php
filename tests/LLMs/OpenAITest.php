@@ -273,27 +273,22 @@ class OpenAITest extends TestCase
     {
         $openAI = $this->mockOpenAIWithResponses();
 
-        // use here doc:
-        $definition = <<<TEXT
-\033[1mKambo\Langchain\LLMs\OpenAI\033[0m
-Params: Array
-(
-    [model_name] => text-davinci-003
-    [model] => text-davinci-003
-    [temperature] => 0.7
-    [max_tokens] => 256
-    [top_p] => 1
-    [frequency_penalty] => 0
-    [presence_penalty] => 0
-    [n] => 1
-    [best_of] => 1
-    [logit_bias] => Array
-        (
-        )
-
-)
-
-TEXT;
+        $definition = "\033[1mKambo\Langchain\LLMs\OpenAI\033[0m" . "\n" .
+            'Params: Array' . "\n" .
+            '(' . "\n" .
+            '    [model_name] => text-davinci-003' . "\n" .
+            '    [model] => text-davinci-003' . "\n" .
+            '    [temperature] => 0.7' . "\n" .
+            '    [max_tokens] => 256' . "\n" .
+            '    [top_p] => 1' . "\n" .
+            '    [frequency_penalty] => 0' . "\n" .
+            '    [presence_penalty] => 0' . "\n" .
+            '    [n] => 1' . "\n" .
+            '    [best_of] => 1' . "\n" .
+            '    [logit_bias] => Array' . "\n" .
+            '        (' . "\n" .
+            '        )' . "\n" . "\n" .
+            ')' . "\n";
 
         $this->assertEquals($definition, (string) $openAI);
     }
