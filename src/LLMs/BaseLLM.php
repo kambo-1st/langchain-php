@@ -9,6 +9,7 @@ use Exception;
 use Kambo\Langchain\Exceptions\ValueError;
 use Stringable;
 use SplFileInfo;
+use Psr\SimpleCache\CacheInterface;
 
 use function get_class;
 use function print_r;
@@ -17,23 +18,32 @@ use function file_exists;
 use function mkdir;
 use function file_put_contents;
 use function json_encode;
+use function md5;
+use function implode;
 
 use const JSON_PRETTY_PRINT;
 
 /**
  * Base class for all language models.
- * TODO [SIMEK, i] implement cache
  */
 abstract class BaseLLM extends BaseLanguageModel implements Stringable
 {
     public bool $verbose = false;
+    public bool $useCache = false;
     public ?BaseCallbackManager $callbackManager = null;
+    private ?CacheInterface $cache;
 
-    public function __construct(?CallbackManager $callbackManager = null)
-    {
+    public function __construct(
+        array $options = [],
+        ?CallbackManager $callbackManager = null,
+        ?CacheInterface $cache = null
+    ) {
         $this->callbackManager = $callbackManager ?? new CallbackManager(
             [new StdOutCallbackHandler() ]
         );
+        $this->cache = $cache;
+        $this->verbose = $options['verbose'] ?? $this->verbose;
+        $this->useCache = $options['use_cache'] ?? $this->useCache;
     }
 
     /**
@@ -52,11 +62,15 @@ abstract class BaseLLM extends BaseLanguageModel implements Stringable
             ['verbose' => $this->verbose]
         );
 
-        try {
-            $newResults = $this->generateResult($prompts, $stop);
-        } catch (Exception $e) {
-            $this->callbackManager->onLLMError($e, ['verbose' => $this->verbose]);
-            throw $e;
+        if ($this->shouldUseCache()) {
+            $newResults = $this->getResultsWithCache($prompts, $stop);
+        } else {
+            try {
+                $newResults = $this->generateResult($prompts, $stop);
+            } catch (Exception $e) {
+                $this->callbackManager->onLLMError($e, ['verbose' => $this->verbose]);
+                throw $e;
+            }
         }
 
         $this->callbackManager->onLLMEnd($newResults, ['verbose' => $this->verbose]);
@@ -153,5 +167,65 @@ abstract class BaseLLM extends BaseLanguageModel implements Stringable
         } else {
             throw new ValueError($filePath . ' must be json or yaml');
         }
+    }
+
+    private function shouldUseCache(): bool
+    {
+        return $this->cache !== null;
+    }
+
+    /**
+     * @param mixed      $prompt
+     * @param array|null $stop
+     *
+     * @return string
+     */
+    private function getCacheKey(mixed $prompt, ?array $stop): string
+    {
+        return $this->llmType() . md5($prompt) . ($stop !== null ? md5(implode('', $stop)) : '');
+    }
+
+    /**
+     * @param array  $prompts
+     * @param ?array $stop
+     *
+     * @return LLMResult
+     */
+    public function getResultsWithCache(array $prompts, ?array $stop): LLMResult
+    {
+        $shouldBeLoaded = [];
+        $alreadyResolved = [];
+        foreach ($prompts as $prompt) {
+            $key = $this->getCacheKey($prompt, $stop);
+            $value = $this->cache->get($key, false);
+
+            if ($value === false) {
+                $shouldBeLoaded[] = $prompt;
+            } else {
+                $alreadyResolved[] = $value;
+            }
+        }
+
+        if (empty($shouldBeLoaded)) {
+            $newResults = LLMResult::createFromCachedValues($alreadyResolved);
+        } else {
+            try {
+                $newResults = $this->generateResult($shouldBeLoaded, $stop);
+            } catch (Exception $e) {
+                $this->callbackManager->onLLMError($e, ['verbose' => $this->verbose]);
+                throw $e;
+            }
+
+            $llmOutput = $newResults->getLLMOutput();
+            foreach ($newResults->getGenerations() as $index => $generation) {
+                $prompt = $shouldBeLoaded[$index];
+
+                $key = $this->getCacheKey($prompt, $stop);
+                $this->cache->set($key, [$generation, $llmOutput]);
+            }
+
+            $newResults->merge($alreadyResolved);
+        }
+        return $newResults;
     }
 }

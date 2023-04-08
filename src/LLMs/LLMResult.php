@@ -5,6 +5,7 @@ namespace Kambo\Langchain\LLMs;
 use Kambo\Langchain\Exceptions\IllegalState;
 
 use function array_key_exists;
+use function array_merge;
 
 /**
  * Class that contains all relevant information for an LLM Result.
@@ -42,5 +43,27 @@ final class LLMResult
     public function getFirstGenerationText(): string
     {
         return $this->getGeneration(0)[0]->text;
+    }
+
+    public static function createFromCachedValues(array $cachedValues): self
+    {
+        $self = new self([$cachedValues[0][0]], $cachedValues[0][1]);
+
+        foreach ($cachedValues as $index => $cachedValue) {
+            if ($index === 0) {
+                continue;
+            }
+
+            $self->generations[] = [$cachedValue[0]];
+        }
+
+        return $self;
+    }
+
+    public function merge(array $alreadyResolved)
+    {
+        foreach ($alreadyResolved as [$existingGenerations]) {
+            $this->generations = array_merge([$existingGenerations], $this->generations);
+        }
     }
 }
