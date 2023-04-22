@@ -35,7 +35,7 @@ This library is still in development. Use at your own risk!
 ### Supported features
 
 * Prompt formatting
-* LLMs: OpenAI GPT-3, ChatGPT
+* LLMs: OpenAI GPT-3, ChatGPT, llama.cpp
 * Vector stores: Simple stupid vector store
 * Texts splitters: CharacterTextSplitter, RecursiveCharacterTextSplitter
 * Embeddings: OpenAI
