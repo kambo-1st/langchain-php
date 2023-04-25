@@ -116,6 +116,7 @@ final class LLaMACpp extends LLM
                     'vocab_only' => $this->vocabOnly,
                     'use_mlock' => $this->useMlock,
                     'n_threads' => $this->nThreads,
+                    'embedding' => false,
                 ]
             );
         }
