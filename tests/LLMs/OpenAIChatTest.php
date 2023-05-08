@@ -6,6 +6,7 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
+use Kambo\Langchain\LLMs\Enums\OpenAIChatModel;
 use Kambo\Langchain\LLMs\OpenAIChat;
 use OpenAI\Client;
 use OpenAI\Transporters\HttpTransporter;
@@ -19,7 +20,10 @@ use function array_merge;
 
 class OpenAIChatTest extends TestCase
 {
-    public function testExecute(): void
+    /**
+     * @dataProvider provideModelData
+     */
+    public function testExecute($inputModel, $resultingModel): void
     {
         $openAI = $this->mockOpenAIWithResponses(
             [
@@ -28,7 +32,7 @@ class OpenAIChatTest extends TestCase
                         'id' => 'chatcmpl-6yGpmeZ6v6cALFWagesgA9zvaYNTs',
                         'object' => 'chat.completion',
                         'created' => 1679822410,
-                        'model' => 'gpt-3.5-turbo-0301',
+                        'model' => $resultingModel,
                         'choices' =>
                             [
                                 0 =>
@@ -50,6 +54,9 @@ class OpenAIChatTest extends TestCase
                             ],
                     ]
                 )
+            ],
+            [
+                'model_name' => $inputModel
             ]
         );
 
@@ -59,20 +66,28 @@ class OpenAIChatTest extends TestCase
         );
     }
 
-    public function testToArray(): void
+    /**
+     * @dataProvider provideModelData
+     */
+    public function testToArray($inputModel, $resultingModel): void
     {
-        $openAI = $this->mockOpenAIWithResponses();
+        $openAI = $this->mockOpenAIWithResponses([], [
+            'model_name' => $inputModel
+        ]);
 
         $this->assertEquals(
             [
-                'model_name' => 'gpt-3.5-turbo',
+                'model_name' => $resultingModel,
                 'model_kwargs' => [],
             ],
             $openAI->toArray(),
         );
     }
 
-    public function testGenerate(): void
+    /**
+     * @dataProvider provideModelData
+     */
+    public function testGenerate($inputModel, $resultingModel): void
     {
         $openAI = $this->mockOpenAIWithResponses(
             [
@@ -81,7 +96,7 @@ class OpenAIChatTest extends TestCase
                         'id' => 'chatcmpl-6yGpmeZ6v6cALFWagesgA9zvaYNTs',
                         'object' => 'chat.completion',
                         'created' => 1679822410,
-                        'model' => 'gpt-3.5-turbo-0301',
+                        'model' => $resultingModel,
                         'choices' =>
                             [
                                 0 =>
@@ -103,6 +118,9 @@ class OpenAIChatTest extends TestCase
                             ],
                     ]
                 )
+            ],
+            [
+                'model_name' => $inputModel
             ]
         );
 
@@ -164,5 +182,23 @@ class OpenAIChatTest extends TestCase
         $transporter = new HttpTransporter($client, $baseUri, $headers);
 
         return new Client($transporter);
+    }
+
+    public function provideModelData()
+    {
+        return [
+            [
+                null,
+                OpenAIChatModel::Gpt35Turbo->value,
+            ],
+            [
+                OpenAIChatModel::Gpt35Turbo->value,
+                OpenAIChatModel::Gpt35Turbo->value,
+            ],
+            [
+                OpenAIChatModel::Gpt4->value,
+                OpenAIChatModel::Gpt4->value,
+            ]
+        ];
     }
 }

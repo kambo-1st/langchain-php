@@ -6,6 +6,7 @@ use Kambo\Langchain\Callbacks\CallbackManager;
 use OpenAI\Client;
 use OpenAI\OpenAI;
 use Kambo\Langchain\Exceptions\IllegalState;
+use Kambo\Langchain\LLMs\Enums\OpenAIChatModel;
 use STS\Backoff\Backoff;
 
 use function getenv;
@@ -17,7 +18,7 @@ use function var_export;
 final class OpenAIChat extends BaseLLM
 {
     private Client $client;
-    private string $modelName = 'gpt-3.5-turbo';
+    private OpenAIChatModel $model;
     private array $modelAdditionalParams = [];
     private int $maxRetries = 6;
     private array $prefixMessages = [];
@@ -43,6 +44,12 @@ final class OpenAIChat extends BaseLLM
         }
 
         $this->client = $client;
+
+        if (isset($config['model_name'])) {
+            $this->model = OpenAIChatModel::from($config['model_name']);
+        } else {
+            $this->model = OpenAIChatModel::Gpt35Turbo;
+        }
     }
 
     public function generateResult(array $prompts, array $stop = null): LLMResult
@@ -79,7 +86,7 @@ final class OpenAIChat extends BaseLLM
     public function getIdentifyingParams(): array
     {
         return [
-            'model_name' => $this->modelName,
+            'model_name' => $this->model->value,
             'model_kwargs' => $this->defaultParams(),
         ];
     }
@@ -105,7 +112,7 @@ final class OpenAIChat extends BaseLLM
             ['role' => 'user', 'content' => $prompts[0]]
         );
 
-        $params = array_merge(['model' => $this->modelName], $this->defaultParams());
+        $params = array_merge(['model' => $this->model->value], $this->defaultParams());
 
         if ($stop !== null) {
             if (isset($params['stop'])) {
