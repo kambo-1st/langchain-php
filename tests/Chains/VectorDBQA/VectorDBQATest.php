@@ -88,9 +88,7 @@ class VectorDBQATest extends TestCase
 
         $chain = VectorDBQA::fromChainType(
             $openAI,
-            'stuff',
-            null,
-            [
+            kwargs: [
                 'vectorstore' => new SimpleStupidVectorStore($embeddings)
             ]
         );
@@ -105,9 +103,7 @@ class VectorDBQATest extends TestCase
 
         $chain = VectorDBQA::fromChainType(
             $openAI,
-            'stuff',
-            null,
-            [
+            kwargs: [
                 'vectorstore' => new SimpleStupidVectorStore($embeddings)
             ]
         );

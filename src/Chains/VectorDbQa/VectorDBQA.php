@@ -122,6 +122,8 @@ class VectorDBQA extends Chain
     public static function fromChainType(
         BaseLLM $llm,
         string $chainType = 'stuff',
+        ?BasePromptTemplate $promptTemplate = null,
+        ?string $documentVariableName = 'context',
         ?array $chainType_kwargs = null,
         array $kwargs = []
     ): VectorDBQA {
@@ -129,6 +131,8 @@ class VectorDBQA extends Chain
         $combineDocuments_chain = self::loadQAChain(
             $llm,
             $chainType,
+            $promptTemplate,
+            $documentVariableName,
             null,
             null,
             $chainType_kwargs
@@ -152,6 +156,8 @@ class VectorDBQA extends Chain
     public static function loadQAChain(
         BaseLanguageModel $llm,
         string $chainType = 'stuff',
+        ?BasePromptTemplate $promptTemplate = null,
+        ?string $documentVariableName = 'context',
         ?bool $verbose = null,
         ?BaseCallbackManager $callbackManager = null,
         ?array $kwargs = []
@@ -159,8 +165,8 @@ class VectorDBQA extends Chain
         return match ($chainType) {
             'stuff' => self::loadStuffChain(
                 $llm,
-                null,
-                'context',
+                $promptTemplate,
+                $documentVariableName,
                 $verbose,
                 $callbackManager,
                 $kwargs
