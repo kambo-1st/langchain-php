@@ -3,13 +3,13 @@
 namespace Kambo\Langchain\Tests\VectorStores;
 
 use Kambo\Langchain\Embeddings\Embeddings;
+use Kambo\Langchain\VectorStores\CachedSimpleStupidVectorStore;
 use Kambo\Langchain\VectorStores\VectorStore;
-use Kambo\Langchain\VectorStores\SimpleStupidVectorStore;
 
-class SimpleStupidVectorStoreTest extends AbstractMockHandlerDrivenVectorStoreTestCase
+class CachedSimpleStupidVectorStoreTest extends AbstractMockHandlerDrivenVectorStoreTestCase
 {
     function getVectorStore(Embeddings $embedding): VectorStore
     {
-        return new SimpleStupidVectorStore($embedding);
+        return new CachedSimpleStupidVectorStore($embedding);
     }
 }

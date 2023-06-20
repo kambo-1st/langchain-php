@@ -12,6 +12,9 @@ use function array_column;
  */
 abstract class VectorStore
 {
+    const SIMILARITY_SEARCH = 'similarity';
+    const MAX_MARGINAL_RELEVANCE_SEARCH = 'mmr';
+
     /**
      * @param iterable $texts Iterable of strings to add to the vectorstore.
      * @param array|null $metadata Optional list of metadatas associated with the texts.

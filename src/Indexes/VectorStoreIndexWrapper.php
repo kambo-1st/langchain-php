@@ -3,6 +3,8 @@
 namespace Kambo\Langchain\Indexes;
 
 use Kambo\Langchain\LLMs\BaseLLM;
+use Kambo\Langchain\Prompts\BasePromptTemplate;
+use Kambo\Langchain\Prompts\PromptTemplate;
 use Kambo\Langchain\VectorStores\VectorStore;
 use Kambo\Langchain\LLMs\OpenAI;
 use Kambo\Langchain\Chains\VectorDbQa\VectorDBQA;
@@ -27,12 +29,19 @@ class VectorStoreIndexWrapper
      *
      * @return string
      */
-    public function query(string $question, ?BaseLLM $llm = null, array $additionalParams = []): string
-    {
+    public function query(
+        string $question,
+        ?BaseLLM $llm = null,
+        ?BasePromptTemplate $promptTemplate = null,
+        ?string $documentVariableName = 'context',
+        array $additionalParams = []
+    ): string {
         $llm = $llm ?? new OpenAI(['temperature' => 0]);
         $chain = VectorDBQA::fromChainType(
             $llm,
             'stuff',
+            $promptTemplate,
+            $documentVariableName,
             null,
             array_merge(['vectorstore' => $this->vectorStore], $additionalParams)
         );

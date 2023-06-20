@@ -32,14 +32,16 @@ class VectorDBQA extends Chain
     public string $outputKey = 'result';
     public bool $returnSourceDocuments = false;
     public array $searchKwargs;
-    public string $searchType = 'similarity';
+    public string $searchType = VectorStore::SIMILARITY_SEARCH;
 
     public function __construct($params)
     {
         parent::__construct(null, null, null, $params);
         $this->vectorstore = $params['vectorstore'];
+        $this->k = $params['k'] ?? $this->k;
         $this->combineDocumentsChain = $params['combine_documents_chain'];
         $this->searchKwargs = $params['search_kwargs'] ?? [];
+        $this->searchType = $params['search_type'] ?? $this->searchType;
         $this->validateSearchType();
     }
 
@@ -74,7 +76,7 @@ class VectorDBQA extends Chain
      */
     private function validateSearchType(): void
     {
-        if (!in_array($this->searchType, ['similarity', 'mmr'])) {
+        if (!in_array($this->searchType, [VectorStore::SIMILARITY_SEARCH, VectorStore::MAX_MARGINAL_RELEVANCE_SEARCH])) {
             throw new Exception('search_type of ' . $this->searchType . ' not allowed.');
         }
     }
@@ -122,6 +124,8 @@ class VectorDBQA extends Chain
     public static function fromChainType(
         BaseLLM $llm,
         string $chainType = 'stuff',
+        ?BasePromptTemplate $promptTemplate = null,
+        ?string $documentVariableName = 'context',
         ?array $chainType_kwargs = null,
         array $kwargs = []
     ): VectorDBQA {
@@ -129,6 +133,8 @@ class VectorDBQA extends Chain
         $combineDocuments_chain = self::loadQAChain(
             $llm,
             $chainType,
+            $promptTemplate,
+            $documentVariableName,
             null,
             null,
             $chainType_kwargs
@@ -152,6 +158,8 @@ class VectorDBQA extends Chain
     public static function loadQAChain(
         BaseLanguageModel $llm,
         string $chainType = 'stuff',
+        ?BasePromptTemplate $promptTemplate = null,
+        ?string $documentVariableName = 'context',
         ?bool $verbose = null,
         ?BaseCallbackManager $callbackManager = null,
         ?array $kwargs = []
@@ -159,8 +167,8 @@ class VectorDBQA extends Chain
         return match ($chainType) {
             'stuff' => self::loadStuffChain(
                 $llm,
-                null,
-                'context',
+                $promptTemplate,
+                $documentVariableName,
                 $verbose,
                 $callbackManager,
                 $kwargs
@@ -254,9 +262,9 @@ class VectorDBQA extends Chain
     {
         $question = $inputs[$this->inputKey];
 
-        if ($this->searchType === 'similarity') {
+        if ($this->searchType === VectorStore::SIMILARITY_SEARCH) {
             $docs = $this->vectorstore->similaritySearch($question, $this->k, $this->searchKwargs);
-        } elseif ($this->searchType === 'mmr') {
+        } elseif ($this->searchType === VectorStore::MAX_MARGINAL_RELEVANCE_SEARCH) {
             $docs = $this->vectorstore->maxMarginalRelevanceSearch($question, $this->k, $this->searchKwargs);
         } else {
             throw new Exception('search_type of ' . $this->searchType . ' not allowed.');
